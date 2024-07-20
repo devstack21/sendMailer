@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url'; // Import de fileURLToPath pour gérer __dirname
 import fs from 'fs';
 import { sendMailer } from './sendMail.js';
 import { upload } from './middleware.file.js';
@@ -9,6 +10,9 @@ import deleteFileRecursively from './deleteFile.js';
 
 const app = express();
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url); // Définition de __filename
+const __dirname = path.dirname(__filename); // Définition de __dirname
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -21,7 +25,9 @@ app.post('/send/mail', upload.single('file'), async function (req, res) {
   }
 
   const { originalname, filename, path: filePath } = req.file; // Extract file information
-  const absoluteFilePath = path.join(__dirname, filePath); // Ensure the path is absolute
+
+  // Use path.join to create the file path
+  const absoluteFilePath = path.join(__dirname, filePath);
 
   try {
     // Ensure the file exists at the given path
