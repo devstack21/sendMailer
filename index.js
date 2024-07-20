@@ -32,6 +32,6 @@ app.post('/send/mail', upload.single('file'), async function (req, res) {
   }
 });
 
-app.listen(process.env.PORT, function () {
-  console.log('Server started on the', process.env.PORT);
+app.listen(3000, function () {
+  console.log('Server started on the', 3000);
 });
