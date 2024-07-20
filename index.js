@@ -32,7 +32,7 @@ app.post('/send/mail', upload.single('file'), async function (req, res) {
   }
 })
 app.get('/' , function(req , res){
-    response.status(200).json({message : 'main Endpoints '})
+    res.status(200).json({message : 'main Endpoints '})
 })
 
 app.listen(3000, function () {
