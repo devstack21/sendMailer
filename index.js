@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import cors from 'cors';
 import { sendMailer } from './sendMail.js';
 import { upload } from './middleware.file.js';
 import deleteFileRecursively from './deleteFile.js';
@@ -14,35 +15,35 @@ dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.post('/send/mail', upload.single('file'), async function (req, res) {
   const { subject, content, text, from, to, username } = req.body;
+  let absoluteFilePath = null;
 
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
+  if (req.file) {
+    const { originalname, filename, path: filePath } = req.file;
+    absoluteFilePath = path.join(__dirname, filePath);
+
+    // Vérifiez les permissions de lecture et d'écriture
+    try {
+      fs.accessSync(absoluteFilePath, fs.constants.R_OK | fs.constants.W_OK);
+    } catch (error) {
+      return res.status(500).json({ message: 'Permission denied or file not found' });
+    }
   }
 
-  const { originalname, filename, path: filePath } = req.file;
-  const absoluteFilePath = path.join(__dirname, filePath);
-
   try {
-    // Vérifiez les permissions de lecture et d'écriture
-    fs.accessSync(absoluteFilePath, fs.constants.R_OK | fs.constants.W_OK);
-
-    await sendMailer(originalname, absoluteFilePath, subject, content, text, from, to, username);
+    await sendMailer(req.file?.originalname, absoluteFilePath, subject, content, text, from, to, username);
     res.status(200).json({ message: 'Email sent successfully' });
   } catch (error) {
-    if (error.code === 'ENOENT') {
-      res.status(404).json({ message: 'File not found' });
-    } else if (error.code === 'EACCES') {
-      res.status(403).json({ message: 'Permission denied' });
-    } else {
-      console.error('Error:', error);
-      res.status(500).json({ message: error.message });
-    }
+    console.error('Error:', error);
+    res.status(500).json({ message: error.message });
   } finally {
-    await deleteFileRecursively(absoluteFilePath);
+    if (absoluteFilePath) {
+      await deleteFileRecursively(absoluteFilePath);
+    }
   }
 });
 
