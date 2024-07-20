@@ -11,7 +11,7 @@ dotenv.config();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.post('/send/mail', upload.single('file'), async function (req, res) {
+  post('/send/mail', upload.single('file'), async function (req, res) {
   const { subject, content, text, from, to, username } = req.body;
 
   if (!req.file) {
@@ -30,8 +30,11 @@ app.post('/send/mail', upload.single('file'), async function (req, res) {
   } finally {
     await deleteFileRecursively(filePath); // Delete the uploaded file after sending
   }
-});
+})
+.get('/' , function(req , res){
+    response.status(200).json({message : 'main Endpoints '})
+})
 
-app.listen(3000, function () {
+.listen(3000, function () {
   console.log('Server started on the', 3000);
 });
