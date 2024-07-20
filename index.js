@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import cors from 'cors'
 import { sendMailer } from './sendMail.js';
 import { upload } from './middleware.file.js';
 import deleteFileRecursively from './deleteFile.js';
@@ -14,7 +13,7 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-app.use(cors())
+
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.post('/send/mail', upload.single('file'), async function (req, res) {
@@ -28,15 +27,20 @@ app.post('/send/mail', upload.single('file'), async function (req, res) {
   const absoluteFilePath = path.join(__dirname, filePath);
 
   try {
-    if (!fs.existsSync(absoluteFilePath)) {
-      return res.status(404).json({ message: 'File not found' });
-    }
+    // Vérifiez les permissions de lecture et d'écriture
+    fs.accessSync(absoluteFilePath, fs.constants.R_OK | fs.constants.W_OK);
 
     await sendMailer(originalname, absoluteFilePath, subject, content, text, from, to, username);
     res.status(200).json({ message: 'Email sent successfully' });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ message: error.message });
+    if (error.code === 'ENOENT') {
+      res.status(404).json({ message: 'File not found' });
+    } else if (error.code === 'EACCES') {
+      res.status(403).json({ message: 'Permission denied' });
+    } else {
+      console.error('Error:', error);
+      res.status(500).json({ message: error.message });
+    }
   } finally {
     await deleteFileRecursively(absoluteFilePath);
   }
