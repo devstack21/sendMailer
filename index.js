@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import cors from 'cors'
 import { sendMailer } from './sendMail.js';
 import { upload } from './middleware.file.js';
 import deleteFileRecursively from './deleteFile.js';
@@ -13,7 +14,7 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
+app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.post('/send/mail', upload.single('file'), async function (req, res) {
