@@ -23,17 +23,14 @@ export async function sendMailer(nameFile, pathFile, subject, content,
         subject : subject,
         text : text,
         html : content,
-        // attachments : [
-        //     {
-        //         filename : `${nameFile}`, // name file 
-        //         path : pathFile,// add extension .pdf
-        //         contentType : "application/pdf"}
-        // ]
+        attachments : [
+            {
+                filename : `${nameFile}`, // name file 
+                path : pathFile,// add extension .pdf
+                contentType : "application/pdf"}
+        ]
     }
-    console.log(mailOptions.from)
-    console.log(mailOptions.to)
-    console.log(mailOptions.html)
-    console.log(mailOptions.text)
+    
     try { await transporter.sendMail(mailOptions)
     } catch (error) {console.error('Error',error)} 
 }
